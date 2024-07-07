@@ -9,6 +9,7 @@
         --message-background-color: rgba(255, 255, 255, 0.15);
         --message-text-color: rgba(255, 255, 255, 0.5);
         --button-background-color: rgba(255, 255, 255, 0.15);
+        --bright-button-background-color: rgba(255, 255, 255, 0.3);
         --button-text-color: #FFFFFF;
         --button-text-color-disabled: rgba(255, 255, 255, 0.5);
         --font-control: "PT Mono", monospace;
@@ -179,6 +180,7 @@
         <div class="input-container">
             <textarea id="outBox" class="pt-mono-regular input-field" rows="1"></textarea>
             <button id="thinkMoreButton" class="button">подумать</button>
+            <button id="infinityThinkButton" class="button">∞</button>
         </div>
         <div class="columns-container">
             <div class="column-1">
@@ -208,9 +210,12 @@
     const currentHost = window.location.host;
     const outBox = document.getElementById('outBox');
     const thinkMoreButton = document.getElementById('thinkMoreButton');
+    const InfinityThinkButton = document.getElementById('infinityThinkButton');
     const messagesContainer = document.getElementById('messagesContainer');
     const longMemory = document.getElementById('longMemory');
     const shortMemory = document.getElementById('shortMemory');
+
+    let infinityActive = false;
 
     const socket = new WebSocket('ws://' + currentHost);
 
@@ -222,7 +227,7 @@
         outBox.value = "Ошибка: " + error.message;
     };
 
-    socket.onmessage = function (event) {
+    socket.onmessage = async function (event) {
         // console.log(event);
 
         memory = JSON.parse(event.data);
@@ -234,14 +239,36 @@
         adjustTextareaHeight(outBox);
 
         // Разблокировать поле ввода при получении ответа
-        outBox.disabled = false;
+        setAllTextareaDisabled(false);
+        // outBox.disabled = false;
         thinkMoreButton.disabled = false;
         thinkMoreButton.style.color = "var(--button-text-color)";
         thinkMoreButton.textContent = "ещё подумать";
 
         addMemory(longMemory, memory.longMemory);
         addMemory(shortMemory, memory.shortMemory);
+
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        if (infinityActive) {
+            thinkMoreButton.click();
+        }
+
     };
+
+    function setAllTextareaDisabled(disabled) {
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.disabled = disabled;
+            if (disabled){
+                textarea.style.color = "var(--disabled-text-color)";
+            }
+            else {
+                textarea.style.color = "var(--button-text-color)";
+            }
+        });
+    }
+    
 
     function addMemory(container, content) {
         container.innerHTML = '';
@@ -268,11 +295,24 @@
         // Очистить и заблокировать поле ввода после отправки сообщения
         outBox.style.height = "39px";
         outBox.value = "";
-        outBox.disabled = true;
+        setAllTextareaDisabled(true);
+        // outBox.disabled = true;
         thinkMoreButton.disabled = true;
         thinkMoreButton.style.color = "var(--button-text-color-disabled)";
         thinkMoreButton.textContent = "думаем..";
     };
+
+    InfinityThinkButton.onclick = function () {
+        if (infinityActive) {
+            console.log("InfinityThinkButton");
+            infinityActive = false;
+            InfinityThinkButton.style.backgroundColor = "var(--button-background-color)";
+        } else {
+            infinityActive = true;
+            InfinityThinkButton.style.backgroundColor = "var(--bright-button-background-color)";
+            thinkMoreButton.click();
+        }
+    }
 
     function getColumn2Content(id) {
         const column2 = document.getElementById(id);
