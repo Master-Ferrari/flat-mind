@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<style>
+    :root {
+        --background-color: #000000;
+        --input-background-color: rgba(255, 255, 255, 0.15);
+        --input-text-color: #FFFFFF;
+        --message-background-color: rgba(255, 255, 255, 0.15);
+        --message-text-color: rgba(255, 255, 255, 0.5);
+        --button-background-color: rgba(255, 255, 255, 0.15);
+        --button-text-color: #FFFFFF;
+        --button-text-color-disabled: rgba(255, 255, 255, 0.5);
+        --font-control: "PT Mono", monospace;
+    }
+
+    body {
+        background-color: var(--background-color);
+        color: var(--input-text-color);
+        font-family: var(--font-control);
+        font-weight: 400;
+        font-style: normal;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: start;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        position: relative;
+    }
+
+    .messages-container {
+        align-items: center;
+        width: 50%;
+        height: 50vh;
+        margin-bottom: 20px;
+        /* max-height: 50vh; */
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--background-color);
+        padding: 10px;
+        box-sizing: border-box;
+        position: relative;
+        top: 10px;
+        left: 25%;
+        transform: translateX(-50%);
+        overflow-x: hidden
+    }
+
+    .message {
+        background-color: var(--message-background-color);
+        width: 100%;
+        padding: 10px;
+        margin-top: 20px;
+        border-radius: 5px;
+        color: var(--message-text-color);
+    }
+
+    .input-container {
+        position: relative;
+        top: 50%;
+        width: 100%;
+        height: 18vh;
+        display: flex;
+        flex-direction: row;
+        align-items: start;
+    }
+
+    .input-field {
+        max-height: 18vh;
+        padding: 10px;
+        font-size: 16px;
+        width: 50%;
+        box-sizing: border-box;
+        /* overflow: hidden; */
+        resize: none;
+        margin-left: 25%;
+        background-color: var(--input-background-color);
+        color: var(--input-text-color);
+        border: none;
+        border-radius: 5px;
+    }
+
+    .memory-field {
+        /* max-height: 25vh; */
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 5px;
+        font-size: 16px;
+        height: 39px;
+        /* width: 50%; */
+        box-sizing: border-box;
+        /* overflow: hidden; */
+        resize: none;
+        /* margin-left: 25%; */
+        background-color: var(--input-background-color);
+        color: var(--input-text-color);
+        border: none;
+        border-radius: 5px;
+    }
+
+    .button {
+        margin-left: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: var(--button-background-color);
+        color: var(--button-text-color);
+        border: none;
+        border-radius: 5px;
+    }
+
+    .columns-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 20px;
+        overflow-y: hidden;
+    }
+
+    .column-1,
+    .column-2 {
+        margin-left: 10px;
+        margin-right: 10px;
+        flex: 1;
+        max-width: 100%;
+        max-height: 22vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .column-1 {
+        max-height: 22vh;
+        overflow-y: hidden;
+    }
+
+    .column-2 {
+        max-height: calc(22vh - 35px);
+        overflow-y: auto;
+    }
+
+
+    textarea button {
+        font-family: var(--font-control);
+    }
+
+    .label {
+        margin-left: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flat Mind 1.0</title>
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="messagesContainer" class="messages-container">
+            <div style="height: 100%;">
+            </div>
+        </div>
+        <div class="input-container">
+            <textarea id="outBox" class="pt-mono-regular input-field" rows="1"></textarea>
+            <button id="thinkMoreButton" class="button">подумать</button>
+        </div>
+        <div class="columns-container">
+            <div class="column-1">
+                <div class="label">
+                    долговременная память
+                </div>
+                <div id="longMemory" class="column-2">
+                </div>
+            </div>
+            <div class="column-1">
+                <div class="label">
+                    кратковременная память
+                </div>
+                <div id="shortMemory" class="column-2">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
+
+<script>
+    let memory;
+
+    const currentHost = window.location.host;
+    const outBox = document.getElementById('outBox');
+    const thinkMoreButton = document.getElementById('thinkMoreButton');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const longMemory = document.getElementById('longMemory');
+    const shortMemory = document.getElementById('shortMemory');
+
+    const socket = new WebSocket('ws://' + currentHost);
+
+    socket.onopen = function () {
+        console.log('Соединение установлено с сервером WebSocket');
+    };
+
+    socket.onerror = function (error) {
+        outBox.value = "Ошибка: " + error.message;
+    };
+
+    socket.onmessage = function (event) {
+        // console.log(event);
+
+        memory = JSON.parse(event.data);
+        console.log(memory);
+
+        let text = memory.lastThought || "";
+
+        outBox.value = text;
+        adjustTextareaHeight(outBox);
+
+        // Разблокировать поле ввода при получении ответа
+        outBox.disabled = false;
+        thinkMoreButton.disabled = false;
+        thinkMoreButton.style.color = "var(--button-text-color)";
+        thinkMoreButton.textContent = "ещё подумать";
+
+        addMemory(longMemory, memory.longMemory);
+        addMemory(shortMemory, memory.shortMemory);
+    };
+
+    function addMemory(container, content) {
+        container.innerHTML = '';
+        for (const msg of content) {
+            const messageBlock = document.createElement('textarea');
+            messageBlock.className = 'pt-mono-regular memory-field';
+            messageBlock.textContent = msg;
+            container.appendChild(messageBlock);
+            container.scrollTop = container.scrollHeight; // Прокрутка к последнему сообщению
+        }
+    }
+
+    thinkMoreButton.onclick = function () {
+        addMessageBlock(outBox.value);
+        
+        memory.lastThought = outBox.value;
+        memory.longMemory = getColumn2Content('longMemory');
+        memory.shortMemory = getColumn2Content('shortMemory');
+
+        const message = { type: "button1", memory: memory };
+        socket.send(JSON.stringify(message));
+        console.log('Сообщение отправлено: ', message);
+
+        // Очистить и заблокировать поле ввода после отправки сообщения
+        outBox.style.height = "39px";
+        outBox.value = "";
+        outBox.disabled = true;
+        thinkMoreButton.disabled = true;
+        thinkMoreButton.style.color = "var(--button-text-color-disabled)";
+        thinkMoreButton.textContent = "думаем..";
+    };
+    
+    function getColumn2Content(id) {
+        const column2 = document.getElementById(id);
+        const contentArray = [];
+        column2.querySelectorAll('.memory-field').forEach(block => {
+            contentArray.push(block.value);
+        });
+        return contentArray;
+    }
+
+    outBox.addEventListener('keydown', function (event) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            thinkMoreButton.click();
+        }
+    });
+
+    outBox.addEventListener('input', function () {
+        adjustTextareaHeight(outBox);
+    });
+
+    function adjustTextareaHeight(element) {
+        element.style.height = 'auto';
+        element.style.height = (element.scrollHeight) + 'px';
+    }
+
+    function addMessageBlock(content) {
+        const messageBlock = document.createElement('div');
+        messageBlock.className = 'message';
+        messageBlock.textContent = content;
+        messagesContainer.appendChild(messageBlock);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Прокрутка к последнему сообщению
+    }
+
+    adjustTextareaHeight(outBox);
+    // addMemory(shortMemory, ["sdfsdfsd", "sdfsdfsd", "sdfsdfsd", "sdfsdfsd", "sdfsdfsd", "sdfsdfsd", "sdfsdfsd"]);
+</script>

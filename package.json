@@ -1,0 +1,19 @@
+{
+  "name": "flatmind",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx rimraf ./dist && npx tsc && node dist/index.js"
+  },
+  "author": "MASTER FERRARI",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "gpthandler": "^1.0.26",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "source-map-support": "^0.5.21"
+  }
+}
