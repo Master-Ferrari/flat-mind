@@ -43,6 +43,7 @@
         margin-bottom: 20px;
         /* max-height: 50vh; */
         overflow-y: auto;
+        scrollbar-width: thin;
         display: flex;
         flex-direction: column;
         background-color: var(--background-color);
@@ -62,6 +63,7 @@
         margin-top: 20px;
         border-radius: 5px;
         color: var(--message-text-color);
+        scrollbar-width: thin;
     }
 
     .input-container {
@@ -87,6 +89,7 @@
         color: var(--input-text-color);
         border: none;
         border-radius: 5px;
+        scrollbar-width: thin;
     }
 
     .memory-field {
@@ -97,6 +100,7 @@
         font-size: 16px;
         height: 39px;
         /* width: 50%; */
+        resize: vertical;
         box-sizing: border-box;
         /* overflow: hidden; */
         resize: none;
@@ -133,7 +137,7 @@
         flex: 1;
         max-width: 100%;
         max-height: 22vh;
-        overflow-y: auto;
+        scrollbar-width: thin;
         overflow-x: hidden;
     }
 
@@ -148,7 +152,8 @@
     }
 
 
-    textarea button {
+    textarea,
+    button {
         font-family: var(--font-control);
     }
 
@@ -251,7 +256,7 @@
 
     thinkMoreButton.onclick = function () {
         addMessageBlock(outBox.value);
-        
+
         memory.lastThought = outBox.value;
         memory.longMemory = getColumn2Content('longMemory');
         memory.shortMemory = getColumn2Content('shortMemory');
@@ -268,7 +273,7 @@
         thinkMoreButton.style.color = "var(--button-text-color-disabled)";
         thinkMoreButton.textContent = "думаем..";
     };
-    
+
     function getColumn2Content(id) {
         const column2 = document.getElementById(id);
         const contentArray = [];
